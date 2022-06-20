@@ -142,8 +142,11 @@ public class NeNotificationService2  extends NotificationListenerService {
 
                 if (pkg.equals("com.eg.android.AlipayGphone")){
                     if (content!=null && !content.equals("")) {
-                        if (content.indexOf("通过扫码向你付款")!=-1 || content.indexOf("成功收款")!=-1){
+                        if (content.indexOf("通过扫码向你付款")!=-1 || content.indexOf("成功收款")!=-1 || title.contains("你已成功收款")){
                             String money = getMoney(content);
+                            if (money == null) {
+                                money = getMoney(title);
+                            }
                             if (money!=null){
                                 Log.d(TAG, "onAccessibilityEvent: 匹配成功： 支付宝 到账 " + money);
                                 appPush(2, Double.valueOf(money));

@@ -160,7 +160,7 @@ public class MainActivity extends AppCompatActivity{
                     Toast.makeText(MainActivity.this, "配置信息错误，本机调试请访问 本机局域网IP:8080(如192.168.1.101:8080) 获取配置信息进行配置!", Toast.LENGTH_LONG).show();
 
                     return;
-                }
+                }jjjjjw666u6
                 //将扫描出的信息显示出来
                 txthost.setText(" 通知地址："+tmp[0]);
                 txtkey.setText(" 通讯密钥："+tmp[1]);
