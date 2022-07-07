@@ -15,17 +15,21 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -36,6 +40,7 @@ public class NeNotificationService2  extends NotificationListenerService {
     private String key = "";
     private Thread newThread = null;
     private PowerManager.WakeLock mWakeLock = null;
+    private int MAXRETRY = 2;
 
 
     //申请设备电源锁
@@ -140,7 +145,7 @@ public class NeNotificationService2  extends NotificationListenerService {
                 Log.d(TAG, "**********************");
 
 
-                if (pkg.equals("com.eg.android.AlipayGphone")){
+                if (pkg.equals("com.eg.android.AlipayGphone") /*|| pkg.equals("com.xiaomi.xmsf")*/){
                     if (content!=null && !content.equals("")) {
                         if (content.indexOf("通过扫码向你付款")!=-1 || content.indexOf("成功收款")!=-1 || title.contains("你已成功收款")){
                             String money = getMoney(content);
@@ -237,7 +242,14 @@ public class NeNotificationService2  extends NotificationListenerService {
         String url = "http://"+host+"/appPush?t="+t+"&type="+type+"&price="+price+"&sign="+sign;
         Log.d(TAG, "onResponse  push: 开始:"+url);
 
-        OkHttpClient okHttpClient = new OkHttpClient();
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .addInterceptor((Interceptor) new OkhttpInterceptor(MAXRETRY)) //过滤器，设置最大重试次数
+                .retryOnConnectionFailure(false) //不自动重连
+                .build();
+
         Request request = new Request.Builder().url(url).method("GET",null).build();
         Call call = okHttpClient.newCall(request);
         call.enqueue(new Callback() {
@@ -253,6 +265,39 @@ public class NeNotificationService2  extends NotificationListenerService {
 
             }
         });
+    }
+
+    public static class OkhttpInterceptor implements Interceptor {
+        // 最大重试次数
+        private int maxRentry;
+
+        public OkhttpInterceptor(int maxRentry) {
+            this.maxRentry = maxRentry;
+        }
+
+        @NotNull
+        @Override
+        public Response intercept(@NotNull Chain chain) throws IOException {
+            /* 递归 2次下发请求，如果仍然失败 则返回 null ,但是 intercept must not return null.
+             * 返回 null 会报 IllegalStateException 异常
+             * */
+            return retry(chain, 0);//这个递归真的很舒服
+        }
+
+        Response retry(Chain chain, int retryCent) {
+            Request request = chain.request();
+            Response response = null;
+            try {
+//                System.out.println("第" + (retryCent + 1) + "次执行发http请求.");
+                response = chain.proceed(request);
+            } catch (Exception e) {
+                if (maxRentry > retryCent) {
+                    return retry(chain, retryCent + 1);
+                }
+            } finally {
+                return response;
+            }
+        }
     }
 
     public static String getMoney(String content){
