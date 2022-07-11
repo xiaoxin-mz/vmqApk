@@ -35,7 +35,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class NeNotificationService2  extends NotificationListenerService {
-    private String TAG = "NeNotificationService2";
+    static private String TAG = "NeNotificationService2";
     private String host = "";
     private String key = "";
     private Thread newThread = null;
@@ -288,7 +288,7 @@ public class NeNotificationService2  extends NotificationListenerService {
             Request request = chain.request();
             Response response = null;
             try {
-//                System.out.println("第" + (retryCent + 1) + "次执行发http请求.");
+                Log.d(TAG, "第" + (retryCent + 1) + "次执行发http请求.");
                 response = chain.proceed(request);
             } catch (Exception e) {
                 if (maxRentry > retryCent) {
