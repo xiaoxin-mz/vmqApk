@@ -32,6 +32,7 @@ import android.widget.Toast;
 
 import com.vone.qrcode.R;
 import com.vone.vmq.util.Constant;
+import com.vone.vmq.util.LogCatHelper;
 import com.google.zxing.activity.CaptureActivity;
 
 import java.io.IOException;
@@ -66,7 +67,7 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
+        LogCatHelper.getInstance(this).start();
 
         txthost = (TextView) findViewById(R.id.txt_host);
         txtkey = (TextView) findViewById(R.id.txt_key);

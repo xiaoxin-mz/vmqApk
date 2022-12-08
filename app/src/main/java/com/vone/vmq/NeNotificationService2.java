@@ -148,9 +148,9 @@ public class NeNotificationService2  extends NotificationListenerService {
                 if (pkg.equals("com.eg.android.AlipayGphone") /*|| pkg.equals("com.xiaomi.xmsf")*/){
                     if (content!=null && !content.equals("")) {
                         if (content.indexOf("通过扫码向你付款")!=-1 || content.indexOf("成功收款")!=-1 || title.contains("你已成功收款")){
-                            String money = getMoney(content);
+                            String money = getMoney_ZFB(content);
                             if (money == null) {
-                                money = getMoney(title);
+                                money = getMoney_ZFB(title);
                             }
                             if (money!=null){
                                 Log.d(TAG, "onAccessibilityEvent: 匹配成功： 支付宝 到账 " + money);
@@ -298,6 +298,29 @@ public class NeNotificationService2  extends NotificationListenerService {
                 return response;
             }
         }
+    }
+
+    public static String getMoney_ZFB(String content){
+
+        List<String> listTemp = new ArrayList<>();
+
+        String regex = "\\d+\\.\\d+元";
+        Pattern pattern = Pattern.compile(regex);
+
+        Matcher matcher = pattern.matcher(content);
+
+        while (matcher.find()) {
+            String group = matcher.group();
+            group = group.replace("元", "");
+            listTemp.add(group);
+        }
+
+        if (listTemp.size() < 1){
+            return null;
+        }else {
+            return listTemp.get(listTemp.size()-1);
+        }
+
     }
 
     public static String getMoney(String content){
